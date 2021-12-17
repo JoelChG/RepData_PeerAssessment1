@@ -2,7 +2,6 @@
 title: 'Reproducible Research: Peer Assessment 1'
 author: "Joel Chávez Gómez"
 output:
-  pdf_document: default
   html_document:
     keep_md: yes
 ---
@@ -67,22 +66,55 @@ g + geom_col(fill = "navyblue", alpha = 0.6) +
              x = "Date", y = "Number of steps") +
         theme_bw()
 ```
-Now we will calculate the **mean** and **median** total number of steps taken
-each day. Once again we will use the `group_by()` and `summarise()` functions from
-the *dplyr* package.  
-First we will filter out any NA value, to avoid troubles. Then, we will create a
-data set called `data_median` with the median total steps for each day:
-```{r, echo = TRUE, cache = TRUE}
-data <- data %>% filter(!is.na(steps))
-data_median <- data %>% filter(!is.na(steps)) %>%
-        group_by(date) %>% summarise(median = median(steps, na.rm = TRUE))
-head(data_median)
+Now we will calculate the mean and median with the `mean()` and `median()`
+function.
+```{r, echo = TRUE}
+median(data_sum$steps)
+mean(data_sum$steps)
+```
+The median total number of daily steps was 10,395 and the mean total number of 
+daily steps was 9354.23. It would be better to visualize this data on the previous 
+plot.
+```{r, echo = TRUE, cache = TRUE, fig.align = 'center', fig.width = 7, fig.height = 5}
+g <- ggplot(data_sum, aes(x = date, y = steps), na.rm = TRUE)
+g + geom_col(fill = "navyblue", alpha = 0.6) +
+        labs(title = "Total Steps per Day", 
+             x = "Date", y = "Number of steps") +
+  geom_hline(aes(yintercept = mean(steps), colour = "Mean"), 
+             linetype = "dashed") +
+  geom_hline(aes(yintercept = median(steps), colour = "Median"), 
+             linetype = "dashed") +
+  scale_colour_manual(values = c("Median" = "black", "Mean" = "red")) +
+        theme_bw()
 ```
 
 ## What is the average daily activity pattern?
 
-
-
+First we will filter out any NA value, to avoid troubles. Then, we will create a
+data set called `data_mean` with the median total steps for each day:
+```{r, echo = TRUE, cache = TRUE}
+data2 <- data %>% filter(!is.na(steps))
+interval_mean <- data2 %>%
+        group_by(interval) %>% summarise(mean = mean(steps, na.rm = TRUE))
+head(interval_mean)
+```
+Let's create a time series plot, with the 5-minute interval on the x-axis, and
+the average number of steps taken, averaged across all day on the y-axis.
+```{r, echo = TRUE, cache = TRUE, fig.align = 'center', fig.width = 7, fig.height = 5}
+t <- ggplot(interval_mean, aes(x = interval, y = mean))
+t + geom_line() +
+  labs(title = "Average number of steps taken across all 5-minute intervals", 
+       x = "5-minute interval", y = "Averaged number of steps") + 
+  theme_bw()
+```
+Let's see which 5-minute interval contains the maximum number of steps, using the
+`max()` function, to get the largest value from the mean column, and the `which()`
+function, to find the corresponding 5-minute interval.
+```{r, echo = TRUE, cache = TRUE}
+max(interval_mean$mean)
+which(interval_mean$mean == max(interval_mean$mean))
+interval_mean[which(interval_mean$mean == max(interval_mean$mean)), ]
+```
 ## Imputing missing values
 
 
