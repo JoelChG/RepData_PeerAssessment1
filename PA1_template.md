@@ -1,9 +1,9 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
+title: 'Reproducible Research: Peer Assessment 1'
 author: "Joel Chávez Gómez"
-output: 
+output:
   html_document:
-    keep_md: true
+    keep_md: yes
 ---
 
 
@@ -76,17 +76,21 @@ Now the date variable is in Date format, this will make data manipulation much
 easier. It's important to keep in mind that there are missing values.
 
 ## What is mean total number of steps taken per day?
-For the next steps we will use the **tidyverse** package, wich contains the *ggplot*
-and *dplyr* packages.
+For the next steps we will use the *ggplot* and *dplyr* packages. we will load 
+them with `library()` function.
 
+```r
+library(dplyr)
+library(ggplot2)
+```
 Now we will plot a histogram of the total number of steps taken each day. To do 
 this, we will first create another data set with the total number of steps for
-each day. We will use the `group_by` and `summarise` functions from the *dplyr*
+each day. We will use the `group_by()` and `summarise()` functions from the *dplyr*
 package, and we will assign the new data set to the object `data_sum`:
 
 ```r
 data_sum <- data %>% group_by(date) %>% 
-        summarise(steps = sum(steps, na.rm = TRUE))
+  summarise(steps = sum(steps, na.rm = TRUE))
 head(data_sum)
 ```
 
@@ -112,37 +116,204 @@ g + geom_col(fill = "navyblue", alpha = 0.6) +
 ```
 
 <img src="PA1_template_files/figure-html/unnamed-chunk-7-1.png" style="display: block; margin: auto;" />
-Now we will calculate the **mean** and **median** total number of steps taken
-each day. Once again we will use the `group_by` and `summarise` functions from
-the *dplyr* package.  
-First we will filter out any NA value, to avoid troubles. Then, we will create a
-data set called `data_median` with the median total steps for each day:
+Now we will calculate the mean and median with the `mean()` and `median()`
+function.
 
 ```r
-data <- data %>% filter(!is.na(steps))
-data_median <- data %>% filter(!is.na(steps)) %>%
-        group_by(date) %>% summarise(median = median(steps, na.rm = TRUE))
-head(data_median)
+median(data_sum$steps)
+```
+
+```
+## [1] 10395
+```
+
+```r
+mean(data_sum$steps)
+```
+
+```
+## [1] 9354.23
+```
+The median total number of daily steps was 10,395 and the mean total number of 
+daily steps was 9354.23. It would be better to visualize this data on the previous 
+plot.
+
+```r
+g <- ggplot(data_sum, aes(x = date, y = steps), na.rm = TRUE)
+g + geom_col(fill = "navyblue", alpha = 0.6) +
+        labs(title = "Total Steps per Day", 
+             x = "Date", y = "Number of steps") +
+  geom_hline(aes(yintercept = mean(steps), colour = "Mean"), 
+             linetype = "dashed") +
+  geom_hline(aes(yintercept = median(steps), colour = "Median"), 
+             linetype = "dashed") +
+  scale_colour_manual(values = c("Median" = "black", "Mean" = "red")) +
+        theme_bw()
+```
+
+<img src="PA1_template_files/figure-html/unnamed-chunk-9-1.png" style="display: block; margin: auto;" />
+
+## What is the average daily activity pattern?
+
+First we will filter out any NA value, to avoid troubles. Then, we will create a
+data set called `data_mean` with the median total steps for each day:
+
+```r
+data2 <- data %>% filter(!is.na(steps))
+interval_mean <- data2 %>%
+        group_by(interval) %>% summarise(mean = mean(steps, na.rm = TRUE))
+head(interval_mean)
 ```
 
 ```
 ## # A tibble: 6 x 2
-##   date       median
-##   <date>      <dbl>
-## 1 2012-10-02      0
-## 2 2012-10-03      0
-## 3 2012-10-04      0
-## 4 2012-10-05      0
-## 5 2012-10-06      0
-## 6 2012-10-07      0
+##   interval   mean
+##      <int>  <dbl>
+## 1        0 1.72  
+## 2        5 0.340 
+## 3       10 0.132 
+## 4       15 0.151 
+## 5       20 0.0755
+## 6       25 2.09
+```
+Let's create a time series plot, with the 5-minute interval on the x-axis, and
+the average number of steps taken, averaged across all day on the y-axis.
+
+```r
+t <- ggplot(interval_mean, aes(x = interval, y = mean))
+t + geom_line(color = "blue") +
+  labs(title = "Average number of steps taken across all 5-minute intervals", 
+       x = "5-minute interval", y = "Averaged number of steps") + 
+  theme_bw()
 ```
 
-## What is the average daily activity pattern?
+<img src="PA1_template_files/figure-html/unnamed-chunk-11-1.png" style="display: block; margin: auto;" />
+Let's see which 5-minute interval contains the maximum number of steps, using the
+`max()` function, to get the largest value from the mean column.
 
+```r
+max(interval_mean$mean)
+```
 
+```
+## [1] 206.1698
+```
+Now we will use the `which()` function to find the row that contains the max value, 
+and then subset the corresponding row using square brackets to select the specified
+row.
 
+```r
+interval_mean[which(interval_mean$mean == max(interval_mean$mean)), ]
+```
+
+```
+## # A tibble: 1 x 2
+##   interval  mean
+##      <int> <dbl>
+## 1      835  206.
+```
 ## Imputing missing values
+How do the missing values affect the data? First let's see how many NA's we got
+in our data, using the `summary()` function with a call to the object `data`
 
+```r
+summary(data)
+```
 
+```
+##      steps             date               interval     
+##  Min.   :  0.00   Min.   :2012-10-01   Min.   :   0.0  
+##  1st Qu.:  0.00   1st Qu.:2012-10-16   1st Qu.: 588.8  
+##  Median :  0.00   Median :2012-10-31   Median :1177.5  
+##  Mean   : 37.38   Mean   :2012-10-31   Mean   :1177.5  
+##  3rd Qu.: 12.00   3rd Qu.:2012-11-15   3rd Qu.:1766.2  
+##  Max.   :806.00   Max.   :2012-11-30   Max.   :2355.0  
+##  NA's   :2304
+```
+There are 2304 missing values in our data. We will impute those missing values
+with the mean for the corresponding 5-minute interval, using `for()` and `if()`
+functions, creating a new dataframe with the imputated values.
+
+```r
+imp_data <- data
+for(i in 1:nrow(imp_data)){
+  if(is.na(imp_data[i, "steps"]) == TRUE){
+    int <- imp_data[i, "interval"]
+    imp_row <- filter(interval_mean, interval == int)
+    imp_mean <- imp_row[, 2]
+    imp_data[i, "steps"] <- imp_mean
+  } 
+}
+```
+Now let's summarise the total number of steps in a new dataframe, just as we did
+before with the first dataframe.
+
+```r
+imp_data_sum <- imp_data %>% group_by(date) %>% 
+  summarise(steps = sum(steps))
+head(imp_data_sum)
+```
+
+```
+## # A tibble: 6 x 2
+##   date        steps
+##   <date>      <dbl>
+## 1 2012-10-01 10766.
+## 2 2012-10-02   126 
+## 3 2012-10-03 11352 
+## 4 2012-10-04 12116 
+## 5 2012-10-05 13294 
+## 6 2012-10-06 15420
+```
+Now let's compare the mean and median total number of steps per day, just as
+before.
+
+```r
+median(imp_data_sum$steps)
+```
+
+```
+## [1] 10766.19
+```
+
+```r
+mean(imp_data_sum$steps)
+```
+
+```
+## [1] 10766.19
+```
+Both values have changed, and both have the same value. This is due to the large
+quantity of missing values that the original dataframe contained.
+Let's plot a histogram for the total number of steps per day from the new data frame
+with the imputed values, with the corresponding new mean and median, so we can 
+visualize the difference from the previous plot.
+
+```r
+g <- ggplot(imp_data_sum, aes(x = date, y = steps), na.rm = TRUE)
+g + geom_col(fill = "navyblue", alpha = 0.6) +
+        labs(title = "Total Steps per Day", 
+             x = "Date", y = "Number of steps") +
+  geom_hline(aes(yintercept = mean(steps), colour = "Mean")) +
+  geom_hline(aes(yintercept = median(steps), colour = "Median"), 
+             linetype = "dashed") +
+  scale_colour_manual(values = c("Median" = "yellow", "Mean" = "black")) +
+        theme_bw()
+```
+
+<img src="PA1_template_files/figure-html/unnamed-chunk-18-1.png" style="display: block; margin: auto;" />
+Now let's make a quick exploratory plot to compare how both dataframes have
+changed.
+
+```r
+par(mfrow = c(1, 2))
+plot(data_sum$date, data_sum$steps, type = "h")
+plot(imp_data_sum$date, imp_data_sum$steps, type = "h")
+```
+
+<img src="PA1_template_files/figure-html/unnamed-chunk-19-1.png" style="display: block; margin: auto;" />
+It's evident that there has been some slight changes with our imputed data, the
+total number of steps from some of the days changed, and since the total steps for
+those days was 0 or nearly 0, both affected the mean and median quite much.
 
 ## Are there differences in activity patterns between weekdays and weekends?

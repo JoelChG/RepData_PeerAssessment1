@@ -165,7 +165,7 @@ g + geom_col(fill = "navyblue", alpha = 0.6) +
   geom_hline(aes(yintercept = mean(steps), colour = "Mean")) +
   geom_hline(aes(yintercept = median(steps), colour = "Median"), 
              linetype = "dashed") +
-  scale_colour_manual(values = c("Median" = "yellow", "Mean" = "red")) +
+  scale_colour_manual(values = c("Median" = "yellow", "Mean" = "black")) +
         theme_bw()
 ```
 Now let's make a quick exploratory plot to compare how both dataframes have
@@ -176,7 +176,7 @@ plot(data_sum$date, data_sum$steps, type = "h")
 plot(imp_data_sum$date, imp_data_sum$steps, type = "h")
 ```
 It's evident that there has been some slight changes with our imputed data, the
-total number of steps from some of the days changed, but as we saw before, the mean
-and median total number of steps per day remain unchanged.
+total number of steps from some of the days changed, and since the total steps for
+those days was 0 or nearly 0, both affected the mean and median quite much.
 
 ## Are there differences in activity patterns between weekdays and weekends?
