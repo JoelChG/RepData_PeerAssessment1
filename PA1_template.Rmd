@@ -55,11 +55,12 @@ this, we will first create another data set with the total number of steps for
 each day. We will use the `group_by()` and `summarise()` functions from the *dplyr*
 package, and we will assign the new data set to the object `data_sum`:
 ```{r, echo = TRUE, cache = TRUE}
-data_sum <- data %>% group_by(date) %>% summarise(steps = sum(steps, na.rm = TRUE))
+data_sum <- data %>% group_by(date) %>% 
+  summarise(steps = sum(steps, na.rm = TRUE))
 head(data_sum)
 ```
 Now we will create a histogram with `ggplot()`
-```{r, echo = TRUE, cache = TRUE, fig.align = 'center', fig.width = 7, fig.height = 5}
+```{r, echo = TRUE, cache = TRUE, fig.align = 'center', fig.width = 8, fig.height = 5}
 g <- ggplot(data_sum, aes(x = date, y = steps), na.rm = TRUE)
 g + geom_col(fill = "navyblue", alpha = 0.6) +
         labs(title = "Total Steps per Day", 
@@ -75,7 +76,7 @@ mean(data_sum$steps)
 The median total number of daily steps was 10,395 and the mean total number of 
 daily steps was 9354.23. It would be better to visualize this data on the previous 
 plot.
-```{r, echo = TRUE, cache = TRUE, fig.align = 'center', fig.width = 7, fig.height = 5}
+```{r, echo = TRUE, cache = TRUE, fig.align = 'center', fig.width = 8, fig.height = 5}
 g <- ggplot(data_sum, aes(x = date, y = steps), na.rm = TRUE)
 g + geom_col(fill = "navyblue", alpha = 0.6) +
         labs(title = "Total Steps per Day", 
@@ -100,23 +101,82 @@ head(interval_mean)
 ```
 Let's create a time series plot, with the 5-minute interval on the x-axis, and
 the average number of steps taken, averaged across all day on the y-axis.
-```{r, echo = TRUE, cache = TRUE, fig.align = 'center', fig.width = 7, fig.height = 5}
+```{r, echo = TRUE, cache = TRUE, fig.align = 'center', fig.width = 8, fig.height = 5}
 t <- ggplot(interval_mean, aes(x = interval, y = mean))
-t + geom_line() +
+t + geom_line(color = "blue") +
   labs(title = "Average number of steps taken across all 5-minute intervals", 
        x = "5-minute interval", y = "Averaged number of steps") + 
   theme_bw()
 ```
 Let's see which 5-minute interval contains the maximum number of steps, using the
-`max()` function, to get the largest value from the mean column, and the `which()`
-function, to find the corresponding 5-minute interval.
+`max()` function, to get the largest value from the mean column.
 ```{r, echo = TRUE, cache = TRUE}
 max(interval_mean$mean)
-which(interval_mean$mean == max(interval_mean$mean))
+```
+Now we will use the `which()` function to find the row that contains the max value, 
+and then subset the corresponding row using square brackets to select the specified
+row.
+```{r, echo = TRUE, cache = TRUE}
 interval_mean[which(interval_mean$mean == max(interval_mean$mean)), ]
 ```
 ## Imputing missing values
-
-
+How do the missing values affect the data? First let's see how many NA's we got
+in our data, using the `summary()` function with a call to the object `data`
+```{r, echo = TRUE, cache = TRUE}
+summary(data)
+```
+There are 2304 missing values in our data. We will impute those missing values
+with the mean for the corresponding 5-minute interval, using `for()` and `if()`
+functions, creating a new dataframe with the imputated values.
+```{r, echo = TRUE, cache = TRUE, message = FALSE}
+imp_data <- data
+for(i in 1:nrow(imp_data)){
+  if(is.na(imp_data[i, "steps"]) == TRUE){
+    int <- imp_data[i, "interval"]
+    imp_row <- filter(interval_mean, interval == int)
+    imp_mean <- imp_row[, 2]
+    imp_data[i, "steps"] <- imp_mean
+  } 
+}
+```
+Now let's summarise the total number of steps in a new dataframe, just as we did
+before with the first dataframe.
+```{r, echo = TRUE, cache = TRUE}
+imp_data_sum <- imp_data %>% group_by(date) %>% 
+  summarise(steps = sum(steps))
+head(imp_data_sum)
+```
+Now let's compare the mean and median total number of steps per day, just as
+before.
+```{r, echo = TRUE}
+median(imp_data_sum$steps)
+mean(imp_data_sum$steps)
+```
+Both values have changed, and both have the same value. This is due to the large
+quantity of missing values that the original dataframe contained.
+Let's plot a histogram for the total number of steps per day from the new data frame
+with the imputed values, with the corresponding new mean and median, so we can 
+visualize the difference from the previous plot.
+```{r, echo = TRUE, cache = TRUE, fig.align = 'center', fig.width = 8, fig.height = 5}
+g <- ggplot(imp_data_sum, aes(x = date, y = steps), na.rm = TRUE)
+g + geom_col(fill = "navyblue", alpha = 0.6) +
+        labs(title = "Total Steps per Day", 
+             x = "Date", y = "Number of steps") +
+  geom_hline(aes(yintercept = mean(steps), colour = "Mean")) +
+  geom_hline(aes(yintercept = median(steps), colour = "Median"), 
+             linetype = "dashed") +
+  scale_colour_manual(values = c("Median" = "yellow", "Mean" = "red")) +
+        theme_bw()
+```
+Now let's make a quick exploratory plot to compare how both dataframes have
+changed.
+```{r, echo = TRUE, cache = TRUE, fig.align = 'center', fig.width = 8, fig.height = 5}
+par(mfrow = c(1, 2))
+plot(data_sum$date, data_sum$steps, type = "h")
+plot(imp_data_sum$date, imp_data_sum$steps, type = "h")
+```
+It's evident that there has been some slight changes with our imputed data, the
+total number of steps from some of the days changed, but as we saw before, the mean
+and median total number of steps per day remain unchanged.
 
 ## Are there differences in activity patterns between weekdays and weekends?
