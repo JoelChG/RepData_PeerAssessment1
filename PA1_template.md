@@ -13,6 +13,7 @@ zip file, so we will unzip it before with the `unzip()` function, and save it
 in the object `data`, then we will use the `head()` function with `data` to look
 at the first rows:
 
+
 ```r
 unzip("./activity.zip")
 data <- read.csv("activity.csv", header = TRUE)
@@ -36,6 +37,7 @@ as NA).
 
 Now we will use the `dim()` function to look at the dimensions of the data set:
 
+
 ```r
 dim(data)
 ```
@@ -46,6 +48,7 @@ dim(data)
 As we can see, the data set contains 17,568 observations of the 3 previously
 mentioned variables. Now let's take a look at the structure of the variables 
 with the `str()` function:
+
 
 ```r
 str(data)
@@ -60,6 +63,7 @@ str(data)
 The steps and interval variable are both integers, but the date variable is a 
 character variable, so we will change it to a date variable with the function
 `as.Date()` specifying the format (YYY-MM-DD):
+
 
 ```r
 data$date <- as.Date(data$date, "%Y-%m-%d")
@@ -79,6 +83,7 @@ easier. It's important to keep in mind that there are missing values.
 For the next steps we will use the *ggplot* and *dplyr* packages. we will load 
 them with `library()` function.
 
+
 ```r
 library(dplyr)
 library(ggplot2)
@@ -87,6 +92,7 @@ Now we will plot a histogram of the total number of steps taken each day. To do
 this, we will first create another data set with the total number of steps for
 each day. We will use the `group_by()` and `summarise()` functions from the *dplyr*
 package, and we will assign the new data set to the object `data_sum`:
+
 
 ```r
 data_sum <- data %>% group_by(date) %>% 
@@ -105,7 +111,8 @@ head(data_sum)
 ## 5 2012-10-05 13294
 ## 6 2012-10-06 15420
 ```
-Now we will create a histogram with `ggplot()`
+Now we will create a histogram with `ggplot()`.
+
 
 ```r
 g <- ggplot(data_sum, aes(x = date, y = steps), na.rm = TRUE)
@@ -118,6 +125,7 @@ g + geom_col(fill = "navyblue", alpha = 0.6) +
 <img src="PA1_template_files/figure-html/unnamed-chunk-7-1.png" style="display: block; margin: auto;" />
 Now we will calculate the mean and median with the `mean()` and `median()`
 function.
+
 
 ```r
 median(data_sum$steps)
@@ -137,6 +145,7 @@ mean(data_sum$steps)
 The median total number of daily steps was 10,395 and the mean total number of 
 daily steps was 9354.23. It would be better to visualize this data on the previous 
 plot.
+
 
 ```r
 g <- ggplot(data_sum, aes(x = date, y = steps), na.rm = TRUE)
@@ -158,6 +167,7 @@ g + geom_col(fill = "navyblue", alpha = 0.6) +
 First we will filter out any NA value, to avoid troubles. Then, we will create a
 data set called `data_mean` with the median total steps for each day:
 
+
 ```r
 data2 <- data %>% filter(!is.na(steps))
 interval_mean <- data2 %>%
@@ -178,6 +188,7 @@ head(interval_mean)
 ```
 Let's create a time series plot, with the 5-minute interval on the x-axis, and
 the average number of steps taken, averaged across all day on the y-axis.
+
 
 ```r
 t <- ggplot(interval_mean, aes(x = interval, y = mean))
@@ -202,6 +213,7 @@ Now we will use the `which()` function to find the row that contains the max val
 and then subset the corresponding row using square brackets to select the specified
 row.
 
+
 ```r
 interval_mean[which(interval_mean$mean == max(interval_mean$mean)), ]
 ```
@@ -214,7 +226,8 @@ interval_mean[which(interval_mean$mean == max(interval_mean$mean)), ]
 ```
 ## Imputing missing values
 How do the missing values affect the data? First let's see how many NA's we got
-in our data, using the `summary()` function with a call to the object `data`
+in our data, using the `summary()` function with a call to the object `data`.
+
 
 ```r
 summary(data)
@@ -234,6 +247,7 @@ There are 2304 missing values in our data. We will impute those missing values
 with the mean for the corresponding 5-minute interval, using `for()` and `if()`
 functions, creating a new dataframe with the imputated values.
 
+
 ```r
 imp_data <- data
 for(i in 1:nrow(imp_data)){
@@ -247,6 +261,7 @@ for(i in 1:nrow(imp_data)){
 ```
 Now let's summarise the total number of steps in a new dataframe, just as we did
 before with the first dataframe.
+
 
 ```r
 imp_data_sum <- imp_data %>% group_by(date) %>% 
@@ -267,6 +282,7 @@ head(imp_data_sum)
 ```
 Now let's compare the mean and median total number of steps per day, just as
 before.
+
 
 ```r
 median(imp_data_sum$steps)
@@ -289,6 +305,7 @@ Let's plot a histogram for the total number of steps per day from the new data f
 with the imputed values, with the corresponding new mean and median, so we can 
 visualize the difference from the previous plot.
 
+
 ```r
 g <- ggplot(imp_data_sum, aes(x = date, y = steps), na.rm = TRUE)
 g + geom_col(fill = "navyblue", alpha = 0.6) +
@@ -297,13 +314,14 @@ g + geom_col(fill = "navyblue", alpha = 0.6) +
   geom_hline(aes(yintercept = mean(steps), colour = "Mean")) +
   geom_hline(aes(yintercept = median(steps), colour = "Median"), 
              linetype = "dashed") +
-  scale_colour_manual(values = c("Median" = "yellow", "Mean" = "black")) +
+  scale_colour_manual(values = c("Median" = "green", "Mean" = "red")) +
         theme_bw()
 ```
 
 <img src="PA1_template_files/figure-html/unnamed-chunk-18-1.png" style="display: block; margin: auto;" />
 Now let's make a quick exploratory plot to compare how both dataframes have
 changed.
+
 
 ```r
 par(mfrow = c(1, 2))
@@ -317,3 +335,50 @@ total number of steps from some of the days changed, and since the total steps f
 those days was 0 or nearly 0, both affected the mean and median quite much.
 
 ## Are there differences in activity patterns between weekdays and weekends?
+We will add a new variable to the data frame we just created, the each observation
+will be one of two values, weekday or weekend, indicating whether a given date 
+is a weekday or weekend day.
+
+
+```r
+day_data <- imp_data
+day_data$day <- ifelse(weekdays(data$date) %in% c("sábado", "domingo"), 
+                             "weekend", "weekday")
+day_data$day <- as.factor(day_data$day)
+day_data_mean <- day_data %>% group_by(interval, day) %>%
+  summarise(mean = mean(steps))
+```
+
+```
+## `summarise()` has grouped output by 'interval'. You can override using the `.groups` argument.
+```
+
+```r
+head(day_data_mean)
+```
+
+```
+## # A tibble: 6 x 3
+## # Groups:   interval [3]
+##   interval day       mean
+##      <int> <fct>    <dbl>
+## 1        0 weekday 2.25  
+## 2        0 weekend 0.215 
+## 3        5 weekday 0.445 
+## 4        5 weekend 0.0425
+## 5       10 weekday 0.173 
+## 6       10 weekend 0.0165
+```
+Now we will
+
+
+```r
+h <- ggplot(day_data_mean, aes(x = interval, y = mean))
+h + facet_grid(rows = vars(day)) +
+  geom_line(color = "darkorange") + 
+  labs(title = "Average steps taken per 5-minute interval on weekdays and weekend", 
+       x = "5-minute interval", y = "Steps taken averaged across all 5-minute intervals") +
+  theme_bw()
+```
+
+<img src="PA1_template_files/figure-html/unnamed-chunk-21-1.png" style="display: block; margin: auto;" />

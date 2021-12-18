@@ -5,13 +5,18 @@ output:
   html_document:
     keep_md: yes
 ---
-
+## Introduction
+For this assignment we will be working with data from a personal activity 
+monitoring device, which collects data at 5 minute intervals.. The data consists
+of two months of monitoring from an anonymous individual, collected during the 
+months of October and November 2012.
 
 ## Loading and preprocessing the data
-First, the data is loaded with the `read.csv()` function. The csv file is in a 
-zip file, so we will unzip it before with the `unzip()` function, and save it
-in the object `data`, then we will use the `head()` function with `data` to look
-at the first rows:
+First, we will load the data with the `read.csv()` function. The csv file is in a 
+zip file, so we will have to unzip it before with the `unzip()` function, and 
+store it in an object called `data`. Then we will use the `head()` function with 
+`data` to look at the first 6 rows:
+
 ```{r, echo = TRUE, cache = TRUE}
 unzip("./activity.zip")
 data <- read.csv("activity.csv", header = TRUE)
@@ -23,29 +28,34 @@ as NA).
         2. **date**: The date on which the measurement was taken in YYYY-MM-DD format.  
         3. **interval**: Identifier for the 5-minute interval in which measurement was taken.  
 
-Now we will use the `dim()` function to look at the dimensions of the data set:
+WE can also note that there are missing values. Now we will use the `dim()`
+function to look at the dimensions of the data set:
+
 ```{r, echo = TRUE, cache = TRUE}
 dim(data)
 ```
-As we can see, the data set contains 17,568 observations of the 3 previously
+The data set contains 17,568 observations of the 3 previously
 mentioned variables. Now let's take a look at the structure of the variables 
 with the `str()` function:
+
 ```{r, echo = TRUE, cache = TRUE}
 str(data)
 ```
 The steps and interval variable are both integers, but the date variable is a 
 character variable, so we will change it to a date variable with the function
-`as.Date()` specifying the format (YYY-MM-DD):
+`as.Date()` specifying the format (YYYY-MM-DD):
+
 ```{r, echo = TRUE, cache = TRUE}
 data$date <- as.Date(data$date, "%Y-%m-%d")
 str(data)
 ```
 Now the date variable is in Date format, this will make data manipulation much
-easier. It's important to keep in mind that there are missing values.
+easier.
 
 ## What is mean total number of steps taken per day?
 For the next steps we will use the *ggplot* and *dplyr* packages. we will load 
 them with `library()` function.
+
 ```{r, echo = TRUE, cache = TRUE, message = FALSE}
 library(dplyr)
 library(ggplot2)
@@ -54,12 +64,16 @@ Now we will plot a histogram of the total number of steps taken each day. To do
 this, we will first create another data set with the total number of steps for
 each day. We will use the `group_by()` and `summarise()` functions from the *dplyr*
 package, and we will assign the new data set to the object `data_sum`:
+
 ```{r, echo = TRUE, cache = TRUE}
 data_sum <- data %>% group_by(date) %>% 
   summarise(steps = sum(steps, na.rm = TRUE))
 head(data_sum)
 ```
-Now we will create a histogram with `ggplot()`
+Now we got a data frame with the variable 'date' in one column, and the total number
+of steps for each specific day in the 'steps' column. Let's create a histogram
+with `ggplot()`.
+
 ```{r, echo = TRUE, cache = TRUE, fig.align = 'center', fig.width = 8, fig.height = 5}
 g <- ggplot(data_sum, aes(x = date, y = steps), na.rm = TRUE)
 g + geom_col(fill = "navyblue", alpha = 0.6) +
@@ -69,6 +83,7 @@ g + geom_col(fill = "navyblue", alpha = 0.6) +
 ```
 Now we will calculate the mean and median with the `mean()` and `median()`
 function.
+
 ```{r, echo = TRUE}
 median(data_sum$steps)
 mean(data_sum$steps)
@@ -76,6 +91,7 @@ mean(data_sum$steps)
 The median total number of daily steps was 10,395 and the mean total number of 
 daily steps was 9354.23. It would be better to visualize this data on the previous 
 plot.
+
 ```{r, echo = TRUE, cache = TRUE, fig.align = 'center', fig.width = 8, fig.height = 5}
 g <- ggplot(data_sum, aes(x = date, y = steps), na.rm = TRUE)
 g + geom_col(fill = "navyblue", alpha = 0.6) +
@@ -93,14 +109,17 @@ g + geom_col(fill = "navyblue", alpha = 0.6) +
 
 First we will filter out any NA value, to avoid troubles. Then, we will create a
 data set called `data_mean` with the median total steps for each day:
+
 ```{r, echo = TRUE, cache = TRUE}
 data2 <- data %>% filter(!is.na(steps))
-interval_mean <- data2 %>%
-        group_by(interval) %>% summarise(mean = mean(steps, na.rm = TRUE))
+interval_mean <- data2 %>% 
+  group_by(interval) %>% 
+  summarise(mean = mean(steps, na.rm = TRUE))
 head(interval_mean)
 ```
-Let's create a time series plot, with the 5-minute interval on the x-axis, and
+Let's create a time series plot, with the 5-minute intervals on the x-axis, and
 the average number of steps taken, averaged across all day on the y-axis.
+
 ```{r, echo = TRUE, cache = TRUE, fig.align = 'center', fig.width = 8, fig.height = 5}
 t <- ggplot(interval_mean, aes(x = interval, y = mean))
 t + geom_line(color = "blue") +
@@ -109,25 +128,31 @@ t + geom_line(color = "blue") +
   theme_bw()
 ```
 Let's see which 5-minute interval contains the maximum number of steps, using the
-`max()` function, to get the largest value from the mean column.
+`max()` function, to get the largest value from the 'mean' column.
 ```{r, echo = TRUE, cache = TRUE}
 max(interval_mean$mean)
 ```
 Now we will use the `which()` function to find the row that contains the max value, 
 and then subset the corresponding row using square brackets to select the specified
 row.
+
 ```{r, echo = TRUE, cache = TRUE}
 interval_mean[which(interval_mean$mean == max(interval_mean$mean)), ]
 ```
 ## Imputing missing values
 How do the missing values affect the data? First let's see how many NA's we got
-in our data, using the `summary()` function with a call to the object `data`
+in our data, using the `summary()` function with a call to the object `data`.
+
 ```{r, echo = TRUE, cache = TRUE}
 summary(data)
+mean(is.na(data$steps))
 ```
-There are 2304 missing values in our data. We will impute those missing values
-with the mean for the corresponding 5-minute interval, using `for()` and `if()`
-functions, creating a new dataframe with the imputated values.
+There are 2,304 missing values in our data, which corresponds to 13.11% of the
+data.  
+We will impute those missing values with the mean for the corresponding 5-minute
+interval, using `for()` and `if()` loops, creating a new data frame with the
+imputed values.
+
 ```{r, echo = TRUE, cache = TRUE, message = FALSE}
 imp_data <- data
 for(i in 1:nrow(imp_data)){
@@ -139,8 +164,9 @@ for(i in 1:nrow(imp_data)){
   } 
 }
 ```
-Now let's summarise the total number of steps in a new dataframe, just as we did
-before with the first dataframe.
+Now let's summarize the total number of steps in a new data frame, just as we did
+before with the first data frame.
+
 ```{r, echo = TRUE, cache = TRUE}
 imp_data_sum <- imp_data %>% group_by(date) %>% 
   summarise(steps = sum(steps))
@@ -148,15 +174,18 @@ head(imp_data_sum)
 ```
 Now let's compare the mean and median total number of steps per day, just as
 before.
+
 ```{r, echo = TRUE}
 median(imp_data_sum$steps)
 mean(imp_data_sum$steps)
 ```
-Both values have changed, and both have the same value. This is due to the large
-quantity of missing values that the original dataframe contained.
+Both values have changed, and both the median and mean now have the same value.
+This is due to the large quantity of missing values that the original data frame
+contained.  
 Let's plot a histogram for the total number of steps per day from the new data frame
 with the imputed values, with the corresponding new mean and median, so we can 
 visualize the difference from the previous plot.
+
 ```{r, echo = TRUE, cache = TRUE, fig.align = 'center', fig.width = 8, fig.height = 5}
 g <- ggplot(imp_data_sum, aes(x = date, y = steps), na.rm = TRUE)
 g + geom_col(fill = "navyblue", alpha = 0.6) +
@@ -165,18 +194,45 @@ g + geom_col(fill = "navyblue", alpha = 0.6) +
   geom_hline(aes(yintercept = mean(steps), colour = "Mean")) +
   geom_hline(aes(yintercept = median(steps), colour = "Median"), 
              linetype = "dashed") +
-  scale_colour_manual(values = c("Median" = "yellow", "Mean" = "black")) +
+  scale_colour_manual(values = c("Median" = "green", "Mean" = "black")) +
         theme_bw()
 ```
-Now let's make a quick exploratory plot to compare how both dataframes have
-changed.
+Now let's make a quick exploratory plot to compare how the number of steps taken
+per day have changed in both data frames.
+
 ```{r, echo = TRUE, cache = TRUE, fig.align = 'center', fig.width = 8, fig.height = 5}
 par(mfrow = c(1, 2))
 plot(data_sum$date, data_sum$steps, type = "h")
 plot(imp_data_sum$date, imp_data_sum$steps, type = "h")
 ```
-It's evident that there has been some slight changes with our imputed data, the
-total number of steps from some of the days changed, and since the total steps for
-those days was 0 or nearly 0, both affected the mean and median quite much.
+It's evident that there has been some changes in a few days with our imputed data.
+The amount of days that have changed may not be many, but since the original value
+for those days was 0 or nearly 0, the mean and median for the total number of steps
+taken per day from the new data frame with the imputed values has been largely
+affected.
 
 ## Are there differences in activity patterns between weekdays and weekends?
+We will add a new variable to the data frame we just created, the each observation
+will be one of two values, weekday or weekend, indicating whether a given date 
+is a weekday or weekend day.
+
+```{r, echo = TRUE}
+day_data <- imp_data
+day_data$day <- ifelse(weekdays(data$date) %in% c("sábado", "domingo"), 
+  "weekend", "weekday")
+day_data$day <- as.factor(day_data$day)
+day_data_mean <- day_data %>% group_by(interval, day) %>%
+  summarise(mean = mean(steps))
+head(day_data_mean)
+```
+Now we will make a time series plot to compare the difference in the averaged
+number of steps per 5-minute interval between weekdays and weekend days.
+
+```{r, echo = TRUE, cache = TRUE, fig.align = 'center', fig.width = 8, fig.height = 5}
+h <- ggplot(day_data_mean, aes(x = interval, y = mean))
+h + facet_grid(rows = vars(day)) +
+  geom_line(color = "darkorange") + 
+  labs(title = "Average steps taken per 5-minute interval on weekdays and weekend", 
+       x = "5-minute interval", y = "Steps taken averaged across all 5-minute intervals") +
+  theme_bw()
+```
