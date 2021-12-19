@@ -5,6 +5,9 @@ output:
   html_document:
     keep_md: yes
 ---
+```{r, echo = FALSE, cache = TRUE, message = FALSE}
+library(tidyverse)
+```
 ## Introduction
 For this assignment we will be working with data from a personal activity 
 monitoring device, which collects data at 5 minute intervals.. The data consists
@@ -216,10 +219,10 @@ We will add a new variable to the data frame we just created, the each observati
 will be one of two values, weekday or weekend, indicating whether a given date 
 is a weekday or weekend day.
 
-```{r, echo = TRUE}
+```{r, echo = TRUE, message = FALSE}
 day_data <- imp_data
 day_data$day <- ifelse(weekdays(data$date) %in% c("sábado", "domingo"), 
-  "weekend", "weekday")
+                             "weekend", "weekday")
 day_data$day <- as.factor(day_data$day)
 day_data_mean <- day_data %>% group_by(interval, day) %>%
   summarise(mean = mean(steps))

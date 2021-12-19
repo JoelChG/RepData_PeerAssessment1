@@ -6,12 +6,17 @@ output:
     keep_md: yes
 ---
 
+## Introduction
+For this assignment we will be working with data from a personal activity 
+monitoring device, which collects data at 5 minute intervals.. The data consists
+of two months of monitoring from an anonymous individual, collected during the 
+months of October and November 2012.
 
 ## Loading and preprocessing the data
-First, the data is loaded with the `read.csv()` function. The csv file is in a 
-zip file, so we will unzip it before with the `unzip()` function, and save it
-in the object `data`, then we will use the `head()` function with `data` to look
-at the first rows:
+First, we will load the data with the `read.csv()` function. The csv file is in a 
+zip file, so we will have to unzip it before with the `unzip()` function, and 
+store it in an object called `data`. Then we will use the `head()` function with 
+`data` to look at the first 6 rows:
 
 
 ```r
@@ -35,7 +40,8 @@ as NA).
         2. **date**: The date on which the measurement was taken in YYYY-MM-DD format.  
         3. **interval**: Identifier for the 5-minute interval in which measurement was taken.  
 
-Now we will use the `dim()` function to look at the dimensions of the data set:
+WE can also note that there are missing values. Now we will use the `dim()`
+function to look at the dimensions of the data set:
 
 
 ```r
@@ -45,7 +51,7 @@ dim(data)
 ```
 ## [1] 17568     3
 ```
-As we can see, the data set contains 17,568 observations of the 3 previously
+The data set contains 17,568 observations of the 3 previously
 mentioned variables. Now let's take a look at the structure of the variables 
 with the `str()` function:
 
@@ -62,7 +68,7 @@ str(data)
 ```
 The steps and interval variable are both integers, but the date variable is a 
 character variable, so we will change it to a date variable with the function
-`as.Date()` specifying the format (YYY-MM-DD):
+`as.Date()` specifying the format (YYYY-MM-DD):
 
 
 ```r
@@ -77,7 +83,7 @@ str(data)
 ##  $ interval: int  0 5 10 15 20 25 30 35 40 45 ...
 ```
 Now the date variable is in Date format, this will make data manipulation much
-easier. It's important to keep in mind that there are missing values.
+easier.
 
 ## What is mean total number of steps taken per day?
 For the next steps we will use the *ggplot* and *dplyr* packages. we will load 
@@ -111,7 +117,9 @@ head(data_sum)
 ## 5 2012-10-05 13294
 ## 6 2012-10-06 15420
 ```
-Now we will create a histogram with `ggplot()`.
+Now we got a data frame with the variable 'date' in one column, and the total number
+of steps for each specific day in the 'steps' column. Let's create a histogram
+with `ggplot()`.
 
 
 ```r
@@ -122,7 +130,7 @@ g + geom_col(fill = "navyblue", alpha = 0.6) +
         theme_bw()
 ```
 
-<img src="PA1_template_files/figure-html/unnamed-chunk-7-1.png" style="display: block; margin: auto;" />
+<img src="PA1_template_files/figure-html/unnamed-chunk-8-1.png" style="display: block; margin: auto;" />
 Now we will calculate the mean and median with the `mean()` and `median()`
 function.
 
@@ -160,7 +168,7 @@ g + geom_col(fill = "navyblue", alpha = 0.6) +
         theme_bw()
 ```
 
-<img src="PA1_template_files/figure-html/unnamed-chunk-9-1.png" style="display: block; margin: auto;" />
+<img src="PA1_template_files/figure-html/unnamed-chunk-10-1.png" style="display: block; margin: auto;" />
 
 ## What is the average daily activity pattern?
 
@@ -170,8 +178,9 @@ data set called `data_mean` with the median total steps for each day:
 
 ```r
 data2 <- data %>% filter(!is.na(steps))
-interval_mean <- data2 %>%
-        group_by(interval) %>% summarise(mean = mean(steps, na.rm = TRUE))
+interval_mean <- data2 %>% 
+  group_by(interval) %>% 
+  summarise(mean = mean(steps, na.rm = TRUE))
 head(interval_mean)
 ```
 
@@ -186,7 +195,7 @@ head(interval_mean)
 ## 5       20 0.0755
 ## 6       25 2.09
 ```
-Let's create a time series plot, with the 5-minute interval on the x-axis, and
+Let's create a time series plot, with the 5-minute intervals on the x-axis, and
 the average number of steps taken, averaged across all day on the y-axis.
 
 
@@ -198,9 +207,9 @@ t + geom_line(color = "blue") +
   theme_bw()
 ```
 
-<img src="PA1_template_files/figure-html/unnamed-chunk-11-1.png" style="display: block; margin: auto;" />
+<img src="PA1_template_files/figure-html/unnamed-chunk-12-1.png" style="display: block; margin: auto;" />
 Let's see which 5-minute interval contains the maximum number of steps, using the
-`max()` function, to get the largest value from the mean column.
+`max()` function, to get the largest value from the 'mean' column.
 
 ```r
 max(interval_mean$mean)
@@ -243,9 +252,19 @@ summary(data)
 ##  Max.   :806.00   Max.   :2012-11-30   Max.   :2355.0  
 ##  NA's   :2304
 ```
-There are 2304 missing values in our data. We will impute those missing values
-with the mean for the corresponding 5-minute interval, using `for()` and `if()`
-functions, creating a new dataframe with the imputated values.
+
+```r
+mean(is.na(data$steps))
+```
+
+```
+## [1] 0.1311475
+```
+There are 2,304 missing values in our data, which corresponds to 13.11% of the
+data.  
+We will impute those missing values with the mean for the corresponding 5-minute
+interval, using `for()` and `if()` loops, creating a new data frame with the
+imputed values.
 
 
 ```r
@@ -259,8 +278,8 @@ for(i in 1:nrow(imp_data)){
   } 
 }
 ```
-Now let's summarise the total number of steps in a new dataframe, just as we did
-before with the first dataframe.
+Now let's summarize the total number of steps in a new data frame, just as we did
+before with the first data frame.
 
 
 ```r
@@ -299,8 +318,9 @@ mean(imp_data_sum$steps)
 ```
 ## [1] 10766.19
 ```
-Both values have changed, and both have the same value. This is due to the large
-quantity of missing values that the original dataframe contained.
+Both values have changed, and both the median and mean now have the same value.
+This is due to the large quantity of missing values that the original data frame
+contained.  
 Let's plot a histogram for the total number of steps per day from the new data frame
 with the imputed values, with the corresponding new mean and median, so we can 
 visualize the difference from the previous plot.
@@ -314,13 +334,13 @@ g + geom_col(fill = "navyblue", alpha = 0.6) +
   geom_hline(aes(yintercept = mean(steps), colour = "Mean")) +
   geom_hline(aes(yintercept = median(steps), colour = "Median"), 
              linetype = "dashed") +
-  scale_colour_manual(values = c("Median" = "green", "Mean" = "red")) +
+  scale_colour_manual(values = c("Median" = "green", "Mean" = "black")) +
         theme_bw()
 ```
 
-<img src="PA1_template_files/figure-html/unnamed-chunk-18-1.png" style="display: block; margin: auto;" />
-Now let's make a quick exploratory plot to compare how both dataframes have
-changed.
+<img src="PA1_template_files/figure-html/unnamed-chunk-19-1.png" style="display: block; margin: auto;" />
+Now let's make a quick exploratory plot to compare how the number of steps taken
+per day have changed in both data frames.
 
 
 ```r
@@ -329,10 +349,12 @@ plot(data_sum$date, data_sum$steps, type = "h")
 plot(imp_data_sum$date, imp_data_sum$steps, type = "h")
 ```
 
-<img src="PA1_template_files/figure-html/unnamed-chunk-19-1.png" style="display: block; margin: auto;" />
-It's evident that there has been some slight changes with our imputed data, the
-total number of steps from some of the days changed, and since the total steps for
-those days was 0 or nearly 0, both affected the mean and median quite much.
+<img src="PA1_template_files/figure-html/unnamed-chunk-20-1.png" style="display: block; margin: auto;" />
+It's evident that there has been some changes in a few days with our imputed data.
+The amount of days that have changed may not be many, but since the original value
+for those days was 0 or nearly 0, the mean and median for the total number of steps
+taken per day from the new data frame with the imputed values has been largely
+affected.
 
 ## Are there differences in activity patterns between weekdays and weekends?
 We will add a new variable to the data frame we just created, the each observation
@@ -347,13 +369,6 @@ day_data$day <- ifelse(weekdays(data$date) %in% c("sábado", "domingo"),
 day_data$day <- as.factor(day_data$day)
 day_data_mean <- day_data %>% group_by(interval, day) %>%
   summarise(mean = mean(steps))
-```
-
-```
-## `summarise()` has grouped output by 'interval'. You can override using the `.groups` argument.
-```
-
-```r
 head(day_data_mean)
 ```
 
@@ -369,7 +384,8 @@ head(day_data_mean)
 ## 5       10 weekday 0.173 
 ## 6       10 weekend 0.0165
 ```
-Now we will
+Now we will make a time series plot to compare the difference in the averaged
+number of steps per 5-minute interval between weekdays and weekend days.
 
 
 ```r
@@ -381,4 +397,4 @@ h + facet_grid(rows = vars(day)) +
   theme_bw()
 ```
 
-<img src="PA1_template_files/figure-html/unnamed-chunk-21-1.png" style="display: block; margin: auto;" />
+<img src="PA1_template_files/figure-html/unnamed-chunk-22-1.png" style="display: block; margin: auto;" />
